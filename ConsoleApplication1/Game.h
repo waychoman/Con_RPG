@@ -1,7 +1,38 @@
 ﻿#pragma once
 
 #include "GameState.h"
+#include "Player.h"
+#include "EnemyPool.h"
+#include "EnemyFactory.h"
 
-// ゲーム全体の進行を管理するクラス。
-// TODO: Game クラスと、ゲームループを実行する Run 関数を宣言する。
-// TODO: 現在の状態・勇者・敵プール・倒した敵の数を管理する。
+#include <cstddef>
+#include <iosfwd>
+
+// 戦闘ルールと画面の切り替えをまとめる。
+// 敵の数値や作り方は、データテーブルとファクトリーに任せる。
+class Game
+{
+public:
+    Game();
+    void Run(std::istream& input, std::ostream& output);
+
+private:
+    void HandleTitle(std::istream& input, std::ostream& output);
+    void HandleBattle(std::istream& input, std::ostream& output);
+    void HandleResult(std::istream& input, std::ostream& output);
+    void StartNewGame(std::ostream& output);
+    bool SpawnEnemy(std::ostream& output);
+    void ReleaseEnemy();
+    void ExitGame();
+
+    // 宣言順に構築される。ファクトリーより先にプールを用意する。
+    Player player_;
+    EnemyPool enemyPool_;
+    EnemyFactory enemyFactory_;
+
+    // プールから借りた敵。Game はこのポインターを delete しない。
+    Enemy* currentEnemy_;
+    GameState state_;
+    GameResult result_;
+    std::size_t defeatedCount_;
+};

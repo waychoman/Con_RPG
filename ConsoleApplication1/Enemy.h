@@ -2,6 +2,16 @@
 
 #include "Character.h"
 
-// 戦闘で登場する敵。
-// TODO: Character を継承する Enemy クラスを宣言する。
-// TODO: プールで再利用するときに名前・HP・攻撃力を設定し直す処理を追加する。
+// 前方宣言。「EnemyData という型がある」と伝える。
+// 参照を引数にするだけなら、ここでは中身まで読む必要がない。
+struct EnemyData;
+
+class Enemy : public Character
+{
+public:
+    // 最初は待機用の値。プールから取り出すときに実際の敵の値にする。
+    Enemy();
+
+    // 既にある Enemy にデータを設定し直すことで、同じ物を再利用する。
+    void Reset(const EnemyData& data);
+};

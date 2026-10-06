@@ -1,6 +1,20 @@
 ﻿#pragma once
 
-// 課題: 有限状態機械。
-// TODO: enum class GameState を宣言する。
-// 状態の候補: Title（タイトル）、Battle（戦闘）、Result（結果）、Exit（終了）。
-// 状態の切り替え処理は Game.cpp に実装する。
+// 「今、どの画面を処理しているか」を表す有限個の状態。
+// Game.cpp がこの値に応じて処理を選び、次の状態へ切り替える。
+enum class GameState
+{
+    Title,
+    Battle,
+    Result,
+    Exit
+};
+
+// 結果画面に来た理由。画面の状態と勝敗は別々に管理する。
+enum class GameResult
+{
+    None,
+    Clear,
+    GameOver,
+    Retired
+};

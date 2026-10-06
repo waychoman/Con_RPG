@@ -70,5 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="LEARNING_GUIDE.md" />
   </ItemGroup>
 </Project>

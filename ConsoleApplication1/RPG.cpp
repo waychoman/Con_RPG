@@ -1,18 +1,22 @@
-﻿// RPG.cpp : このファイルには 'main' 関数が含まれています。プログラム実行の開始と終了がそこで行われます。
-//
-
+﻿#include "Game.h"
 #include <iostream>
-#include "Character.h"
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#endif
 
 int main()
 {
-    Character player("勇者", 100);
-    Character enemy("スライム", 30);
+#ifdef _WIN32
+    // プロジェクトの /utf-8 設定と合わせ、日本語をUTF-8で表示する。
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
 
-    std::cout << player.name << " HP: " << player.hp << '\n';
-    std::cout << enemy.name << " HP: " << enemy.hp << '\n';
-
-    enemy.TakeDamage(10);
-
-    std::cout << enemy.name << " HP: " << enemy.hp << '\n';
+    // main は入り口。ゲームの具体的な処理は Game に任せる。
+    Game game;
+    game.Run(std::cin, std::cout);
+    return 0;
 }
