@@ -19,7 +19,7 @@ struct EnemyData
     std::string name;
     int maxHp;
     int attack;
-    int heavyAttackChance; // 大技の確率（%）。次のターンは息切れになる。
+    int heavyAttackChance; // 大技の確率（%）。大技の直後は0%になる。
     int guardChance;       // 防御の確率（%）。残りが通常攻撃になる。
 };
 

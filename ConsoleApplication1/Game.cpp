@@ -86,8 +86,9 @@ void Game::HandleTitle(std::istream& input, std::ostream& output)
         << player_.GetAttack() << " / 回復薬" << player_.GetPotionCount()
         << "個（HP" << player_.GetPotionHealingAmount() << "回復）\n"
         << "攻撃は80～120%に変動し、10%で会心（1.5倍）。敵HPも毎回変化。\n"
-        << "敵の予告を見よう！ 大技は防御し、息切れ中に攻撃や回復。\n"
-        << "防御は通常攻撃を100%軽減、大技を50%軽減。2ターン連続では使えない。\n"
+        << "敵の予告を見よう！ 大技は2ターン連続では来ない。\n"
+        << "防御は通常攻撃を100%軽減、大技をランダムに50～100%軽減。\n"
+        << "防御は2ターン連続では使えない。敵の防御中は回復の好機。\n"
         << "通常攻撃と防御で気力が1回復。\n"
         << "強攻撃は気力2で威力1.75倍、敵の防御を無視。\n"
         << "1: はじめる\n0: 終了\n";
@@ -133,14 +134,11 @@ bool Game::SpawnEnemy(std::ostream& output)
 
 void Game::PrepareEnemyIntent()
 {
-    // 大技の後は必ず1ターン息切れ。これが読み合いのチャンスになる。
-    if (enemyIntent_ == EnemyIntent::HeavyAttack)
-    {
-        enemyIntent_ = EnemyIntent::Recover;
-        return;
-    }
+    // 大技の直後は大技の確率を0にし、その分を通常攻撃に回す。
+    // 防御の確率は変えず、通常攻撃か防御だけを選ぶ。
+    const int heavyChance = enemyIntent_ == EnemyIntent::HeavyAttack
+        ? 0 : currentEnemy_->GetHeavyAttackChance();
     const int roll = random_.Between(1, 100);
-    const int heavyChance = currentEnemy_->GetHeavyAttackChance();
     if (roll <= heavyChance) { enemyIntent_ = EnemyIntent::HeavyAttack; }
     else if (roll <= heavyChance + currentEnemy_->GetGuardChance())
     {
@@ -163,18 +161,11 @@ void Game::ShowEnemyIntent(std::ostream& output) const
     case EnemyIntent::Guard:
         output << "防御（通常攻撃の被害75%軽減・反撃なし）\n";
         break;
-    case EnemyIntent::Recover:
-        output << "息切れ（反撃なし・こちらの攻撃が25%強化）\n";
-        break;
     }
 }
 
 void Game::AttackEnemy(int strengthPercent, bool ignoreGuard, std::ostream& output)
 {
-    if (enemyIntent_ == EnemyIntent::Recover)
-    {
-        strengthPercent = Scale(strengthPercent, 125);
-    }
     const AttackRoll roll = random_.RollAttack(player_.GetAttack(), strengthPercent);
     int damage = roll.damage;
     if (enemyIntent_ == EnemyIntent::Guard && !ignoreGuard)
@@ -199,21 +190,16 @@ void Game::ResolveEnemyTurn(bool defending, std::ostream& output)
         output << "敵は守りを固めている。反撃はない。\n";
         return;
     }
-    if (enemyIntent_ == EnemyIntent::Recover)
-    {
-        output << "敵は息切れしている。反撃はない。\n";
-        return;
-    }
-
     const bool heavy = enemyIntent_ == EnemyIntent::HeavyAttack;
     const AttackRoll roll = random_.RollAttack(currentEnemy_->GetAttack(), heavy ? 200 : 100);
     int damage = roll.damage;
     if (defending)
     {
-        // 会心も含めて、通常攻撃は完全に防ぐ。大技は半分だけ受ける。
-        damage = heavy ? Scale(damage, 50) : 0;
-        output << (heavy ? "防御で大技のダメージを50%軽減！\n"
-            : "防御で通常攻撃のダメージを100%軽減！\n");
+        // 会心も含めて軽減する。大技だけ、軽減率を毎回抽選する。
+        const int reduction = heavy ? random_.Between(50, 100) : 100;
+        damage = Scale(damage, 100 - reduction);
+        output << "防御で" << (heavy ? "大技" : "通常攻撃")
+            << "のダメージを" << reduction << "%軽減！\n";
     }
     if (roll.critical) { output << "敵の会心！ "; }
     output << currentEnemy_->GetName() << "の" << (heavy ? "大技" : "反撃")
@@ -236,7 +222,7 @@ void Game::HandleBattle(std::istream& input, std::ostream& output)
     ShowEnemyIntent(output);
     output << "1: 通常攻撃（気力+1）\n2: 回復薬（HP"
         << player_.GetPotionHealingAmount() << "回復・手番消費）\n"
-        << "3: 防御（通常100%・大技50%軽減・気力+1）"
+        << "3: 防御（通常100%・大技50～100%軽減・気力+1）"
         << (defendedLastTurn_ ? "【連続使用不可】" : "")
         << "\n4: 強攻撃（気力"
         << player_.GetPowerAttackCost() << "消費・防御無視）\n0: 冒険をやめる\n";

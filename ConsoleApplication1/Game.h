@@ -14,8 +14,7 @@ enum class EnemyIntent
 {
     Attack,
     HeavyAttack,
-    Guard,
-    Recover
+    Guard
 };
 
 class Game
