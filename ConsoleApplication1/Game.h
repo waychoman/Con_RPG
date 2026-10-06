@@ -4,16 +4,26 @@
 #include "Player.h"
 #include "EnemyPool.h"
 #include "EnemyFactory.h"
+#include "CombatRandom.h"
 
 #include <cstddef>
 #include <iosfwd>
 
-// 戦闘ルールと画面の切り替えをまとめる。
-// 敵の数値や作り方は、データテーブルとファクトリーに任せる。
+// 画面の状態とは別に、次の敵の行動を記録する。
+enum class EnemyIntent
+{
+    Attack,
+    HeavyAttack,
+    Guard,
+    Recover
+};
+
 class Game
 {
 public:
     Game();
+    // 検証では開始値（シード）を固定し、同じ戦闘を再現できる。
+    explicit Game(unsigned int seed);
     void Run(std::istream& input, std::ostream& output);
 
 private:
@@ -22,6 +32,10 @@ private:
     void HandleResult(std::istream& input, std::ostream& output);
     void StartNewGame(std::ostream& output);
     bool SpawnEnemy(std::ostream& output);
+    void PrepareEnemyIntent();
+    void ShowEnemyIntent(std::ostream& output) const;
+    void AttackEnemy(int strengthPercent, bool ignoreGuard, std::ostream& output);
+    void ResolveEnemyTurn(bool defending, std::ostream& output);
     void ReleaseEnemy();
     void ExitGame();
 
@@ -29,10 +43,12 @@ private:
     Player player_;
     EnemyPool enemyPool_;
     EnemyFactory enemyFactory_;
+    CombatRandom random_;
 
     // プールから借りた敵。Game はこのポインターを delete しない。
     Enemy* currentEnemy_;
     GameState state_;
     GameResult result_;
+    EnemyIntent enemyIntent_;
     std::size_t defeatedCount_;
 };

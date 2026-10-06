@@ -1,15 +1,29 @@
 ﻿#include "Player.h"
 
-// Player を作るとき、先に親クラス Character のコンストラクタを呼ぶ。
+#include <algorithm>
+
+namespace
+{
+    // 勇者の調整値をここに集める。再挑戦と初回は同じ設定を使う。
+    const int StartingHp = 100;
+    const int StartingAttack = 12;
+    const int StartingPotions = 2;
+    const int PotionHealing = 25;
+    const int MaximumEnergy = 3;
+    const int PowerAttackCost = 2;
+}
+
 Player::Player()
-    : Character("勇者", 100, 12), potionCount_(3)
+    : Character("勇者", StartingHp, StartingAttack),
+      potionCount_(StartingPotions), energy_(MaximumEnergy)
 {
 }
 
-int Player::GetPotionCount() const
-{
-    return potionCount_;
-}
+int Player::GetPotionCount() const { return potionCount_; }
+int Player::GetPotionHealingAmount() const { return PotionHealing; }
+int Player::GetEnergy() const { return energy_; }
+int Player::GetMaxEnergy() const { return MaximumEnergy; }
+int Player::GetPowerAttackCost() const { return PowerAttackCost; }
 
 int Player::UsePotion()
 {
@@ -18,19 +32,32 @@ int Player::UsePotion()
         return 0;
     }
 
-    // 継承した Heal を使う。HP 上限や生存判定は Character に任せる。
-    const int recoveredHp = Heal(35);
+    const int recoveredHp = Heal(PotionHealing);
     if (recoveredHp > 0)
     {
         --potionCount_;
     }
-
-    // HP が満タン、または倒れている場合は 0 となり、薬も消費しない。
     return recoveredHp;
+}
+
+bool Player::TryUsePowerAttack()
+{
+    if (energy_ < PowerAttackCost)
+    {
+        return false;
+    }
+    energy_ -= PowerAttackCost;
+    return true;
+}
+
+void Player::RestoreEnergy()
+{
+    energy_ = std::min(MaximumEnergy, energy_ + 1);
 }
 
 void Player::Reset()
 {
-    ResetStats("勇者", 100, 12);
-    potionCount_ = 3;
+    ResetStats("勇者", StartingHp, StartingAttack);
+    potionCount_ = StartingPotions;
+    energy_ = MaximumEnergy;
 }

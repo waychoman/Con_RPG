@@ -2,17 +2,24 @@
 
 #include "Character.h"
 
-// public Character は継承。名前・HP・攻撃力の処理を Character から引き継ぐ。
-// Player では「勇者だけの機能」である回復薬の管理を追加する。
+// 勇者は Character のHP管理を継承し、回復薬と気力を追加する。
 class Player : public Character
 {
 public:
     Player();
 
     int GetPotionCount() const;
+    int GetPotionHealingAmount() const;
+    int GetEnergy() const;
+    int GetMaxEnergy() const;
+    int GetPowerAttackCost() const;
+
     int UsePotion();
+    bool TryUsePowerAttack();
+    void RestoreEnergy();
     void Reset();
 
 private:
     int potionCount_;
+    int energy_;
 };

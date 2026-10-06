@@ -72,4 +72,8 @@
     <None Include="README.md" />
     <None Include="LEARNING_GUIDE.md" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CombatRandom.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClInclude Include="CombatRandom.h"><Filter>ヘッダー ファイル</Filter></ClInclude>
+  </ItemGroup>
 </Project>

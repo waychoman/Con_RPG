@@ -139,6 +139,7 @@
     <ClCompile Include="EnemyFactory.cpp" />
     <ClCompile Include="EnemyPool.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="CombatRandom.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
@@ -149,6 +150,7 @@
     <ClInclude Include="EnemyPool.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="CombatRandom.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

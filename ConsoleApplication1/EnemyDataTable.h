@@ -19,6 +19,8 @@ struct EnemyData
     std::string name;
     int maxHp;
     int attack;
+    int heavyAttackChance; // 大技の確率（%）。次のターンは息切れになる。
+    int guardChance;       // 防御の確率（%）。残りが通常攻撃になる。
 };
 
 // データテーブル: 敵の設定を1か所に集め、IDから取り出せるようにする。

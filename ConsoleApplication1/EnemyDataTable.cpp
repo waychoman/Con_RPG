@@ -2,9 +2,9 @@
 
 EnemyDataTable::EnemyDataTable()
     : data_{{
-        { EnemyId::Slime, "スライム", 30, 5 },
-        { EnemyId::Goblin, "ゴブリン", 45, 9 },
-        { EnemyId::Dragon, "ドラゴン", 70, 14 }
+        { EnemyId::Slime, "スライム", 32, 6, 20, 10 },
+        { EnemyId::Goblin, "ゴブリン", 50, 10, 30, 20 },
+        { EnemyId::Dragon, "ドラゴン", 110, 20, 35, 20 }
     }}
 {
 }
