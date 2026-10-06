@@ -50,5 +50,7 @@ private:
     GameState state_;
     GameResult result_;
     EnemyIntent enemyIntent_;
+    // 前の有効な手番が防御なら、次の手番は別の行動を選ぶ。
+    bool defendedLastTurn_;
     std::size_t defeatedCount_;
 };

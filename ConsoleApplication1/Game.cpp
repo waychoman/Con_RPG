@@ -58,7 +58,7 @@ Game::Game()
 Game::Game(unsigned int seed)
     : enemyFactory_(enemyPool_), random_(seed), currentEnemy_(nullptr),
       state_(GameState::Title), result_(GameResult::None),
-      enemyIntent_(EnemyIntent::Attack), defeatedCount_(0)
+      enemyIntent_(EnemyIntent::Attack), defendedLastTurn_(false), defeatedCount_(0)
 {
 }
 
@@ -87,7 +87,8 @@ void Game::HandleTitle(std::istream& input, std::ostream& output)
         << "個（HP" << player_.GetPotionHealingAmount() << "回復）\n"
         << "攻撃は80～120%に変動し、10%で会心（1.5倍）。敵HPも毎回変化。\n"
         << "敵の予告を見よう！ 大技は防御し、息切れ中に攻撃や回復。\n"
-        << "防御は被害を75%軽減。通常攻撃と防御で気力が1回復。\n"
+        << "防御は通常攻撃を100%軽減、大技を50%軽減。2ターン連続では使えない。\n"
+        << "通常攻撃と防御で気力が1回復。\n"
         << "強攻撃は気力2で威力1.75倍、敵の防御を無視。\n"
         << "1: はじめる\n0: 終了\n";
     if (ReadChoice(input, output, "10") == 1) { StartNewGame(output); }
@@ -98,6 +99,7 @@ void Game::StartNewGame(std::ostream& output)
 {
     ReleaseEnemy();
     player_.Reset();
+    defendedLastTurn_ = false;
     defeatedCount_ = 0;
     result_ = GameResult::None;
     // 乱数はリセットしないので、再挑戦も前回の戦闘の繰り返しにならない。
@@ -208,8 +210,10 @@ void Game::ResolveEnemyTurn(bool defending, std::ostream& output)
     int damage = roll.damage;
     if (defending)
     {
-        damage = std::max(1, Scale(damage, 25));
-        output << "防御でダメージを75%軽減！\n";
+        // 会心も含めて、通常攻撃は完全に防ぐ。大技は半分だけ受ける。
+        damage = heavy ? Scale(damage, 50) : 0;
+        output << (heavy ? "防御で大技のダメージを50%軽減！\n"
+            : "防御で通常攻撃のダメージを100%軽減！\n");
     }
     if (roll.critical) { output << "敵の会心！ "; }
     output << currentEnemy_->GetName() << "の" << (heavy ? "大技" : "反撃")
@@ -232,7 +236,9 @@ void Game::HandleBattle(std::istream& input, std::ostream& output)
     ShowEnemyIntent(output);
     output << "1: 通常攻撃（気力+1）\n2: 回復薬（HP"
         << player_.GetPotionHealingAmount() << "回復・手番消費）\n"
-        << "3: 防御（被害75%軽減・気力+1）\n4: 強攻撃（気力"
+        << "3: 防御（通常100%・大技50%軽減・気力+1）"
+        << (defendedLastTurn_ ? "【連続使用不可】" : "")
+        << "\n4: 強攻撃（気力"
         << player_.GetPowerAttackCost() << "消費・防御無視）\n0: 冒険をやめる\n";
 
     const int choice = ReadChoice(input, output, "12340");
@@ -263,6 +269,11 @@ void Game::HandleBattle(std::istream& input, std::ostream& output)
     }
     else if (choice == 3)
     {
+        if (defendedLastTurn_)
+        {
+            output << "防御は2ターン連続では使えません。別の行動を選んでください。\n";
+            return;
+        }
         player_.RestoreEnergy();
         output << "勇者は防御した。気力が1回復（上限"
             << player_.GetMaxEnergy() << "）。\n";
@@ -276,6 +287,10 @@ void Game::HandleBattle(std::istream& input, std::ostream& output)
         }
         AttackEnemy(175, true, output);
     }
+
+    // 成功した行動だけで履歴を更新する。入力ミスや使えない薬・技では
+    // 防御の禁止を解除せず、敵の予定や乱数も進めない。
+    defendedLastTurn_ = (choice == 3);
 
     if (!currentEnemy_->IsAlive())
     {
